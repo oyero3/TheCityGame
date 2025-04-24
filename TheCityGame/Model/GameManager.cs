@@ -102,13 +102,16 @@ namespace TheCityStrategyGame.Model
             List<Die.DieValue> FinalRolls = new List<Die.DieValue>();
             List<Die.DieValue> TempRolls = new List<Die.DieValue>();
 
-            foreach(var die in Dice) 
+            foreach (var die in Dice) 
             {
                 die.Roll();
                 TempRolls.Add(die.Value);            
             }
 
-            
+            foreach(var item in TempRolls)
+            {
+                Console.WriteLine(item.ToString());
+            }         
         }
         public void RerollSelectedDice()
         {
