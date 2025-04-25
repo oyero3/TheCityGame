@@ -17,7 +17,9 @@ namespace TheCityStrategyGame.Model
         private const int MAX_REROLLS = 2;
         private const int MAX_DICE = 6;
         private int CurrentRerolls;
+        private int Turn;
         private List<Die> Dice;
+        bool isGameOver = false;
 
         public GameManager(int playerCount)
         {
@@ -28,7 +30,7 @@ namespace TheCityStrategyGame.Model
             CurrentPlayer = new Player();
             CurrentRerolls = new int();
             Dice = new List<Die>();
-            GameOver = false;
+            Turn = 1;
 
             // Initialize players
             for (int i = 0; i < playerCount; i++)
@@ -45,14 +47,19 @@ namespace TheCityStrategyGame.Model
             InitializeDice();
             DeterminePlayerOrder();
 
-            do{
+            do
+            {
                 foreach (var player in Players)
                 {
-                    StartNewTurn();
+                    StartNewTurn(player);
+                    ShopPhase();
                     RollPhase();
-
+                    ResolveDice();            
+                    CheckWinConditions();
+                    Turn++;
                 }
-            }while (true);
+            } 
+            while (!isGameOver);
         }
 
         private void InitializeDice()
@@ -60,6 +67,7 @@ namespace TheCityStrategyGame.Model
             for (int i = 0; i< MAX_DICE; i++)
             {
                 var die = new Die();
+                die.DieId = i;
                 Dice.Add(die);
             }
         }
@@ -79,62 +87,74 @@ namespace TheCityStrategyGame.Model
 
                 playerRolls.Add(player, total);
             }
-            // Sort Players by roll
             Players = playerRolls.OrderByDescending(x => x.Value).Select(x => x.Key).ToList();
         }
 
-
-
-        public void StartNewTurn()
+        public void StartNewTurn(Player player)
         {
             CurrentRerolls = 0;
-            foreach (var die in Dice)
-            {
-                die.Roll();
-            }
-
-            RerollSelectedDice();
+            CurrentPlayer = player;
+            Console.WriteLine($"It is [{player.Name}'s] turn.");
+            Console.WriteLine($"[{player.Name}] turn [{Turn}].");
         }
 
+        public void ShopPhase()
+        {
+            Shop.Refresh();
+            foreach (var card in Shop.AvaliableCards)
+            {
+                Console.WriteLine($"Card: [{card.Name}] - Cost: [${card.Cost}] - Description: [{card.Description}]");
+            }
+        }
         public void RollPhase()
         {
-            bool playerIsRerolling = true;
-            List<Die.DieValue> FinalRolls = new List<Die.DieValue>();
-            List<Die.DieValue> TempRolls = new List<Die.DieValue>();
+            List<Die> TempRolls = new List<Die>();
 
+            // First Roll
             foreach (var die in Dice) 
             {
+                die.UnlockDie();
                 die.Roll();
-                TempRolls.Add(die.Value);            
+                TempRolls.Add(die);
             }
 
-            foreach(var item in TempRolls)
+            // Reroll
+            do 
             {
-                Console.WriteLine(item.ToString());
-            }         
+                PrintDice(TempRolls);
+                Console.WriteLine($"Which dice do you want to reroll?");
+                string? userInput = Console.ReadLine();
+
+                if (userInput == null || userInput == "None")
+                {
+                    Console.WriteLine("User is not rolling any more dice.");
+                } 
+                else
+                {
+                    List<int> diceToReroll = userInput.Split(',').Select(int.Parse).ToList();
+                    for(int i = 0; i < diceToReroll.Count; i++)
+                    {
+                        int d = diceToReroll[i];
+                        TempRolls[diceToReroll[d]] = RerollSelectedDie(Dice[diceToReroll[d]]);
+                    }
+                    CurrentRerolls ++;
+                }             
+            } 
+            while (CurrentRerolls < MAX_REROLLS);
+            
+            Dice = TempRolls.OrderBy(x=> x.Value).ToList();
+            foreach (var die in Dice)
+            {
+                die.LockDie();
+            }
         }
-        public void RerollSelectedDice()
+        public Die RerollSelectedDie(Die die)
         {
             if (CurrentRerolls < MAX_REROLLS)
             {
-                foreach (var die in Dice)
-                {
-                    if (!die.IsLocked)
-                    {
-                        die.Roll();
-                    }
-                }
-                CurrentRerolls++;
+                die.Roll();
             }
-            else
-            {
-                foreach (var die in Dice)
-                {
-                    die.IsLocked = true;
-                }
-
-                throw new InvalidOperationException("No rerolls left for this turn.");
-            }
+            return die;
         }
 
         public void ResolveDice()
@@ -144,117 +164,85 @@ namespace TheCityStrategyGame.Model
             int healing = 0;
             int attacks = 0;
             int money = 0;
+            int ones = 0;
+            int twos = 0;
+            int threes = 0;
+            List<Die> TempDice = Dice;
 
-            // Count dice results
-            Dictionary<Die.DieValue, int> counts = new Dictionary<Die.DieValue, int>();
-            foreach (Die.DieValue value in Enum.GetValues(typeof(Die.DieValue)))
+            foreach (var die in TempDice)
             {
-                counts[value] = 0;
-            }
-
-            foreach (var die in Dice)
-            {
-                counts[die.Value]++;
-            }
-
-            // Resolve number sets for scoring
-            for (int i = 1; i <= 3; i++)
-            {
-                Die.DieValue value = (Die.DieValue)i;
-                if (counts[value] >= 3)
+                switch (die.Value)
                 {
-                    int setScore = i;
-                    foreach(var card in player.Cards)
-                    {
-                        setScore = card.ModifySetScore(value, setScore);
-                    }
+                    case Die.DieValue.Attack: attacks++;break;
+                    case Die.DieValue.Heart: healing++;break;
+                    case Die.DieValue.Money: money++;break;
+                    case Die.DieValue.One: ones++; break;
+                    case Die.DieValue.Two: twos++; break;
+                    case Die.DieValue.Three: threes++; break;
+                }             
+            }
 
-                    scoring += setScore;
-                }
-            }   
+            if (ones == 3) { scoring =+ 1; }
+            if (ones == 4 || twos == 3) { scoring =+ 2; }
+            if (ones == 5 || twos == 4 || threes == 3) { scoring =+3; }
+            if (ones == 6 || twos == 5 || threes == 4) { scoring =+4; }
+            if (twos == 6 || threes == 5) { scoring += 5; }
+            if (threes == 6) { scoring += 6; }
+
+            player.Heal(healing);
+            player.AddMoney(money);
             player.AddScore(scoring);
 
-            // Resolve healing
-            healing = counts[DieValue.Heart];
-            player.Heal(healing);
-
-            // Resolve attacks
-            attacks = counts[DieValue.Attack];
-            
-            // Resolve money
-            money = counts[DieValue.Money];
-            player.AddMoney(money);
-
-            // Handle city entrance if applicable
-            if (cityOccupant == null && attacks > 0)
-            {
-                EnterCity(player);
-            }
-
-            // Apply attacks
             if (attacks>0) 
             {
                 ProcessAttacks(player, attacks);
             }
-
-            // Check for winning condition
-            CheckWinConditions();
-
-            NextPlayer();
         }
 
-        private void ProcessAttacks(Player attacker, int attackCount)
+        private void ProcessAttacks(Player attacker, int attacks)
         {
-            if (attacker == cityOccupant)
+            // Handle city entrance if applicable
+            if (CityOccupant == null && attacks > 0)
             {
-                foreach (var defender in Players.Where(p => p != cityOccupant))
+                EnterCity(attacker);
+            }
+            else if (attacker == CityOccupant)
+            {
+                foreach (var defender in Players.Where(p => p != CityOccupant))
                 {
-                    defender.TakeDamage(attackCount);
+                    defender.TakeDamage(attacks);
                 }
             }
-            else if (cityOccupant != null) 
+            else if (CityOccupant != null) 
             {
-                cityOccupant.TakeDamage(attackCount);
-                bool leavesCity = true;
+                CityOccupant.TakeDamage(attacks);
+                Console.WriteLine($"Does [{CityOccupant.Name}] want to leave the city? (Y/N)");
+                var input = Console.ReadKey();
 
-                if (leavesCity)
+                if (input.Key == ConsoleKey.Y)
                 {
-                    ExitCity(cityOccupant);
+                    ExitCity(CityOccupant);
                     EnterCity(attacker);
                 }
             }
+
         }
 
         private void EnterCity(Player player)
         {
-            cityOccupant = player;
+            CityOccupant = player;
             player.AddScore(1);
         }
 
         private void ExitCity(Player player)
         {
-            if (cityOccupant == player)
+            if (CityOccupant == player)
             {
-                cityOccupant = null;
+                CityOccupant = null;
             }
         }
 
-        public void BuyCard(int cardIndex)
-        {
-            var player = CurrentPlayer;
-            var card = shop.AvailableCards[cardIndex];
 
-            if (player.Money >= card.Cost)
-            {
-                player.SpendMoney(card.Cost);
-                player.AddCard(card);
-                shop.RemoveCard(cardIndex);
-            }
-            else
-            {
-                throw new InvalidOperationException("Not enough money to buy this card");
-            }
-        }
 
         private void CheckWinConditions()
         {
@@ -280,29 +268,19 @@ namespace TheCityStrategyGame.Model
             }
         }
 
-        private void NextPlayer()
-        {
-            do
-            {
-                currentPlayerIndex = (currentPlayerIndex +1) % Players.Count;
-            } while (Players[currentPlayerIndex].IsDead);
-
-            if (currentPlayerIndex == 0)
-            {
-                shop.Refresh();
-
-                if (cityOccupant != null)
-                {
-                    cityOccupant.AddScore(2);
-                }
-            }
-        }
-
         public event Action<Player, WinReason> GameOver;
 
         private void OnGameOver(Player winner, WinReason reason)
         {
             GameOver?.Invoke(winner, reason);
+        }
+
+        private void PrintDice(List<Die> dice)
+        {
+            foreach (var die in dice)
+            {
+                Console.WriteLine($"Die Number [{die.DieId}] Value = [{die.Value}]");
+            }
         }
     }
 }
