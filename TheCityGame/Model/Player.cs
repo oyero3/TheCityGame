@@ -43,51 +43,44 @@ namespace TheCityStrategyGame.Model
         public void Heal(int amount)
         {
             Health = Math.Min(Health + amount, MaxHealth);
+            Console.WriteLine($"Player [{Name}] is healing to [{Health}/{MAX_HEALTH}] health.");
         }
 
         public void TakeDamage(int amount)
         {        
             Health -= amount;
+            Console.WriteLine($"Player [{Name}] is taking [{amount}] damage.");
         }
 
         public void AddScore(int amount)
         {            
             Score += amount;
+            Console.WriteLine($"Player [{Name}] gained [{amount}] points.");
         }
 
         public void AddMoney(int amount)
         {
             Money += amount;
+            Console.WriteLine($"Player [{Name}] gained [${amount}].");
         }
 
         public void SpendMoney(int amount)
         {
             Money -= amount;
-        }
-
-        public void AddCard(Card card)
-        {
-            Cards.Add(card);
-            card.OnAcquired(this);
-        }
-        public void UseCard(Card card)
-        {
-            card.OnUsed(this);
-        }
-        public void DiscardCard(Card card) 
-        {
-            Cards.Remove(card);
-            card.OnDiscarded(this);
+            Console.WriteLine($"Player [{Name}] spent [${amount}].");
         }
 
         public void Reset()
         {
-            Health = MaxHealth;
-            Score = 0;
-            Money = 0;
-            Strength = 1;
-            IsDead = false;
-            Cards.Clear();
+            if (IsDead == true)
+            {
+                Health = MaxHealth;
+                Score = 0;
+                Money = 0;
+                Strength = 1;
+                IsDead = false;
+                Cards.Clear();
+            }
         }
 
         #endregion

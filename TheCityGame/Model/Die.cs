@@ -7,6 +7,7 @@ namespace TheCityStrategyGame.Model
         #region Fields
 
         private static Random Random = new ();
+        public int DieId {get; set;}
         public DieValue Value {get; set; }
         public bool IsLocked { get; set; }
         #endregion
@@ -26,7 +27,7 @@ namespace TheCityStrategyGame.Model
         #region Methods
         public Die()
         {
-            Roll();
+            DieId = 0;
             IsLocked = false;
         }
 
@@ -37,6 +38,15 @@ namespace TheCityStrategyGame.Model
                 int roll = Random.Next(1, 7);
                 Value = (DieValue)roll;
             }
+        }
+        public void LockDie()
+        {
+            IsLocked = true; 
+        }
+
+        public void UnlockDie()
+        {
+            IsLocked = false;
         }
         #endregion
         

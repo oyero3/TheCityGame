@@ -19,6 +19,22 @@ namespace TheCityStrategyGame.Model
             Cost = 0;
         }
 
+        public void AddCard(Player player, List<Card> cards ,Card card)
+        {
+            cards.Add(card);
+            card.OnAcquired(player);
+        }
+        public void UseCard(Player player, List<Card> cards ,Card card)
+        {
+            card.OnUsed(player);
+        }
+        public void DiscardCard(Player player, List<Card> cards ,Card card)
+        {
+            cards.Remove(card);
+            card.OnDiscarded(player);
+        }
+        
+        public virtual void Effect() {}
         public virtual void OnAcquired(Player owner) { }
         public virtual void OnUsed(Player owner) { }
         public virtual void OnDiscarded(Player owner) { }
