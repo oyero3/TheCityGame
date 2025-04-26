@@ -16,34 +16,28 @@ namespace TheCityStrategyGame.Model
         private const int WINNING_SCORE = 20;
         private const int MAX_REROLLS = 2;
         private const int MAX_DICE = 6;
+        private const int CITY_POINTS = 2;
         private int CurrentRerolls;
         private int Turn;
         private List<Die> Dice;
         bool isGameOver = false;
 
-        public GameManager(int playerCount)
+        public GameManager()
         {
             Random = new Random();
             Players = new List<Player>();
             Shop = new Shop();
             CityOccupant = null;
-            CurrentPlayer = new Player();
+            CurrentPlayer = new Player("");
             CurrentRerolls = new int();
             Dice = new List<Die>();
             Turn = 1;
+        }
 
-            // Initialize players
-            for (int i = 0; i < playerCount; i++)
-            {
-                Players.Add(new Player());
-            }
+        public void StartGame(int playerCount) 
+        {
 
-            // Initialize the dice
-            for (int i = 0; i < MAX_DICE; i++)
-            {
-                Dice.Add(new Die());
-            }
-
+            InitializePlayers(playerCount);
             InitializeDice();
             DeterminePlayerOrder();
 
@@ -56,10 +50,30 @@ namespace TheCityStrategyGame.Model
                     RollPhase();
                     ResolveDice();            
                     CheckWinConditions();
-                    Turn++;
                 }
+
+                Turn++;
             } 
             while (!isGameOver);
+        }
+
+        private void InitializePlayers(int playerCount) 
+        {
+            // Initialize players
+            for (int i = 0; i < playerCount; i++)
+            {
+                Console.Write($"Player [{i+1}] enter your name:");
+                string? playername = Console.ReadLine();
+
+                while (playername == null)
+                {
+                    Console.WriteLine("Please enter a valid number of players (1 or more):");
+                    playername = Console.ReadLine();
+                }          
+
+                Players.Add(new Player(playername));
+            }
+            Console.WriteLine("\n");
         }
 
         private void InitializeDice()
@@ -67,7 +81,7 @@ namespace TheCityStrategyGame.Model
             for (int i = 0; i< MAX_DICE; i++)
             {
                 var die = new Die();
-                die.DieId = i;
+                die.DieId = i+1;
                 Dice.Add(die);
             }
         }
@@ -81,11 +95,12 @@ namespace TheCityStrategyGame.Model
                 int total = 0;
                 foreach (var die in Dice) 
                 {
-                    roll =+ Random.Next(1,7);
-                    total =+ roll;
+                    roll += Random.Next(1,7);
+                    total += roll;
                 }
 
                 playerRolls.Add(player, total);
+                Console.WriteLine($"{player.Name}'s roll: {roll}\n");
             }
             Players = playerRolls.OrderByDescending(x => x.Value).Select(x => x.Key).ToList();
         }
@@ -94,16 +109,23 @@ namespace TheCityStrategyGame.Model
         {
             CurrentRerolls = 0;
             CurrentPlayer = player;
+            if (CurrentPlayer == CityOccupant) { CurrentPlayer.AddScore(2); }
             Console.WriteLine($"It is [{player.Name}'s] turn.");
             Console.WriteLine($"[{player.Name}] turn [{Turn}].");
         }
 
         public void ShopPhase()
         {
+            Console.WriteLine($"The Shop");
             Shop.Refresh();
             foreach (var card in Shop.AvaliableCards)
             {
-                Console.WriteLine($"Card: [{card.Name}] - Cost: [${card.Cost}] - Description: [{card.Description}]");
+                Console.WriteLine($"-----------------------");
+                Console.WriteLine($"|    [{card.Name}]     |");
+                Console.WriteLine($"|      Cost: [${card.Cost}]      |");
+                Console.WriteLine($"Description: [{card.Description}]");
+                Console.WriteLine($"-----------------------");
+
             }
         }
         public void RollPhase()
@@ -132,17 +154,20 @@ namespace TheCityStrategyGame.Model
                 else
                 {
                     List<int> diceToReroll = userInput.Split(',').Select(int.Parse).ToList();
+                    Console.Write($"Rerolling: ");
+                    Console.WriteLine(string.Join(" ", diceToReroll));
                     for(int i = 0; i < diceToReroll.Count; i++)
                     {
-                        int d = diceToReroll[i];
-                        TempRolls[diceToReroll[d]] = RerollSelectedDie(Dice[diceToReroll[d]]);
+                        int d = diceToReroll[i] -1;
+                        TempRolls[d] = RerollSelectedDie(Dice[d]);
                     }
                     CurrentRerolls ++;
                 }             
             } 
             while (CurrentRerolls < MAX_REROLLS);
             
-            Dice = TempRolls.OrderBy(x=> x.Value).ToList();
+            Dice = TempRolls.ToList();
+            PrintDice(Dice);
             foreach (var die in Dice)
             {
                 die.LockDie();
@@ -182,10 +207,10 @@ namespace TheCityStrategyGame.Model
                 }             
             }
 
-            if (ones == 3) { scoring =+ 1; }
-            if (ones == 4 || twos == 3) { scoring =+ 2; }
-            if (ones == 5 || twos == 4 || threes == 3) { scoring =+3; }
-            if (ones == 6 || twos == 5 || threes == 4) { scoring =+4; }
+            if (ones == 3) { scoring += 1; }
+            if (ones == 4 || twos == 3) { scoring += 2; }
+            if (ones == 5 || twos == 4 || threes == 3) { scoring +=3; }
+            if (ones == 6 || twos == 5 || threes == 4) { scoring +=4; }
             if (twos == 6 || threes == 5) { scoring += 5; }
             if (threes == 6) { scoring += 6; }
 
@@ -193,7 +218,7 @@ namespace TheCityStrategyGame.Model
             player.AddMoney(money);
             player.AddScore(scoring);
 
-            if (attacks>0) 
+            if (attacks > 0) 
             {
                 ProcessAttacks(player, attacks);
             }
@@ -225,7 +250,6 @@ namespace TheCityStrategyGame.Model
                     EnterCity(attacker);
                 }
             }
-
         }
 
         private void EnterCity(Player player)
@@ -273,14 +297,16 @@ namespace TheCityStrategyGame.Model
         private void OnGameOver(Player winner, WinReason reason)
         {
             GameOver?.Invoke(winner, reason);
+            isGameOver = true;
         }
 
         private void PrintDice(List<Die> dice)
         {
             foreach (var die in dice)
             {
-                Console.WriteLine($"Die Number [{die.DieId}] Value = [{die.Value}]");
+                Console.Write($"[{die.DieId} - {die.Value}] ");
             }
+            Console.WriteLine("\n");
         }
     }
 }

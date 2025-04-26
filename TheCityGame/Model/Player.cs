@@ -26,9 +26,9 @@ namespace TheCityStrategyGame.Model
         #endregion
 
         #region Player
-        public Player()
+        public Player(string name)
         {
-            Name = "";
+            Name = name;
             Health = 10;
             MaxHealth = MAX_HEALTH;
             Score = 0;

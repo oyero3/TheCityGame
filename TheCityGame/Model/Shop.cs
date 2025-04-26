@@ -16,15 +16,16 @@ namespace TheCityStrategyGame.Model
             ActiveDeck = new CardDeck();
             AvaliableCards = new List<Card>();
             BoughtCards = new List<Card>();
-            Refresh();
         }
 
         public void Refresh()
         {
             AvaliableCards.Clear();
-            for (int i = 0; i < SHOP_SIZE; i++)
+            int cardsToTake = 2;
+           
+            for (int i = 0; i < cardsToTake; i++)
             {
-                Card card = ActiveDeck.Cards[i];
+                Card card = ActiveDeck.Cards[0]; // Always take the first card
                 if (card != null)
                 {
                     AvaliableCards.Add(card);
@@ -32,6 +33,7 @@ namespace TheCityStrategyGame.Model
                 }
             }
         }
+        
 
         public void BuyCard(Player player, int cardIndex)
         {
