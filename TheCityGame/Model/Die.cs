@@ -10,6 +10,7 @@ namespace TheCityStrategyGame.Model
         public int DieId {get; set;}
         public DieValue Value {get; set; }
         public bool IsLocked { get; set; }
+        private static int MAX_REROLLS = 5;
         #endregion
 
         #region Enums
@@ -39,6 +40,14 @@ namespace TheCityStrategyGame.Model
                 Value = (DieValue)roll;
             }
         }
+        public Die Reroll(int CurrentRerolls)
+        {
+            if (CurrentRerolls < MAX_REROLLS)
+            {
+                this.Roll();
+            }
+            return this;
+        }
         public void LockDie()
         {
             IsLocked = true; 
@@ -47,6 +56,11 @@ namespace TheCityStrategyGame.Model
         public void UnlockDie()
         {
             IsLocked = false;
+        }
+
+        public void PrintDie()
+        {
+            Console.Write($"[{this.DieId} - {this.Value}] ");
         }
         #endregion
         

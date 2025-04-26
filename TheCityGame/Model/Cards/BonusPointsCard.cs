@@ -2,12 +2,12 @@ namespace TheCityStrategyGame.Model.Cards
 {
     public class BonusPointsCard : Card
     {
-        private int bonusPoints;
+        private int bonusPoints = 4;
 
         public BonusPointsCard() 
         {
             Name = "Bonus Points";
-            Description = "Roll 1 die and add that amount to your points. (Roll until you get a number)";
+            Description = "+ 4 Points";
             Cost = 3;
         }
 

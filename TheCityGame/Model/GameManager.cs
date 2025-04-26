@@ -46,7 +46,7 @@ namespace TheCityStrategyGame.Model
                 foreach (var player in Players)
                 {
                     StartNewTurn(player);
-                    ShopPhase();
+                    Shop.ShopPhase(Shop, Shop.AvaliableCards);
                     RollPhase();
                     ResolveDice();            
                     CheckWinConditions();
@@ -65,15 +65,15 @@ namespace TheCityStrategyGame.Model
                 Console.Write($"Player [{i+1}] enter your name:");
                 string? playername = Console.ReadLine();
 
-                while (playername == null)
+                while (playername == null || playername == "")
                 {
-                    Console.WriteLine("Please enter a valid number of players (1 or more):");
+                    Console.WriteLine("Enter a valid name:");
                     playername = Console.ReadLine();
                 }          
 
                 Players.Add(new Player(playername));
-            }
-            Console.WriteLine("\n");
+                 Console.WriteLine("\n");
+           }
         }
 
         private void InitializeDice()
@@ -92,7 +92,7 @@ namespace TheCityStrategyGame.Model
             foreach (var player in Players)
             {
                 int roll = 0;
-                int total = 0;
+                int total = 0; 
                 foreach (var die in Dice) 
                 {
                     roll += Random.Next(1,7);
@@ -114,23 +114,13 @@ namespace TheCityStrategyGame.Model
             Console.WriteLine($"[{player.Name}] turn [{Turn}].");
         }
 
-        public void ShopPhase()
-        {
-            Console.WriteLine($"The Shop");
-            Shop.Refresh();
-            foreach (var card in Shop.AvaliableCards)
-            {
-                Console.WriteLine($"-----------------------");
-                Console.WriteLine($"|    [{card.Name}]     |");
-                Console.WriteLine($"|      Cost: [${card.Cost}]      |");
-                Console.WriteLine($"Description: [{card.Description}]");
-                Console.WriteLine($"-----------------------");
 
-            }
-        }
         public void RollPhase()
         {
             List<Die> TempRolls = new List<Die>();
+
+            Console.WriteLine("Press space to roll:");
+            Console.ReadKey();
 
             // First Roll
             foreach (var die in Dice) 
@@ -138,13 +128,13 @@ namespace TheCityStrategyGame.Model
                 die.UnlockDie();
                 die.Roll();
                 TempRolls.Add(die);
+                die.PrintDie();
             }
 
             // Reroll
             do 
             {
-                PrintDice(TempRolls);
-                Console.WriteLine($"Which dice do you want to reroll?");
+                Console.WriteLine($"\nWhich dice do you want to reroll?");
                 string? userInput = Console.ReadLine();
 
                 if (userInput == null || userInput == "None")
@@ -153,14 +143,15 @@ namespace TheCityStrategyGame.Model
                 } 
                 else
                 {
-                    List<int> diceToReroll = userInput.Split(',').Select(int.Parse).ToList();
+                    List<int> diceToReroll = userInput.Split(' ').Select(int.Parse).ToList();
                     Console.Write($"Rerolling: ");
                     Console.WriteLine(string.Join(" ", diceToReroll));
                     for(int i = 0; i < diceToReroll.Count; i++)
                     {
                         int d = diceToReroll[i] -1;
-                        TempRolls[d] = RerollSelectedDie(Dice[d]);
+                        TempRolls[d] = Dice[d].Reroll(CurrentRerolls);
                     }
+                    PrintDice(TempRolls);
                     CurrentRerolls ++;
                 }             
             } 
@@ -173,14 +164,7 @@ namespace TheCityStrategyGame.Model
                 die.LockDie();
             }
         }
-        public Die RerollSelectedDie(Die die)
-        {
-            if (CurrentRerolls < MAX_REROLLS)
-            {
-                die.Roll();
-            }
-            return die;
-        }
+
 
         public void ResolveDice()
         {

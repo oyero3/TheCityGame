@@ -18,6 +18,18 @@ namespace TheCityStrategyGame.Model
             BoughtCards = new List<Card>();
         }
 
+        public void ShopPhase(Shop shop, List<Card> AvaliableCards)
+        {
+            Console.WriteLine($"The Shop");
+            foreach (var card in AvaliableCards)
+            {
+                Console.WriteLine($"-----------------------");
+                Console.WriteLine($"|    [{card.Name}]     |");
+                Console.WriteLine($"|      Cost: [${card.Cost}]      |");
+                Console.WriteLine($"|Description: [{card.Description}|]");
+                Console.WriteLine($"-----------------------");
+            }
+        }
         public void Refresh()
         {
             AvaliableCards.Clear();

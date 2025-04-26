@@ -2,7 +2,7 @@ namespace TheCityStrategyGame.Model.Cards
 {
     public class DoubleValueCard : Card
     {
-        private Die.DieValue targetValue;
+        private Die.DieValue targetValue = Die.DieValue.Three;
         public DoubleValueCard()
         {
             Name = "Double Value 3's";
@@ -10,9 +10,9 @@ namespace TheCityStrategyGame.Model.Cards
             Cost = 5;
         }
 
-        public override void ModifySetScore(Die.DieValue setValue, int score)
+        public void ModifySetScore( int score)
         {
-            if(setValue == Die.DieValue.Three)
+            if(targetValue == Die.DieValue.Three)
             {
                 score = 2 * score;
             }
