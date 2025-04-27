@@ -62,7 +62,7 @@ namespace TheCityStrategyGame.Model
             // Initialize players
             for (int i = 0; i < playerCount; i++)
             {
-                Console.Write($"Player [{i+1}] enter your name:");
+                Console.Write($"Player [{i+1}] enter your name: ");
                 string? playername = Console.ReadLine();
 
                 while (playername == null || playername == "")
@@ -72,7 +72,6 @@ namespace TheCityStrategyGame.Model
                 }          
 
                 Players.Add(new Player(playername));
-                 Console.WriteLine("\n");
            }
         }
 
@@ -100,7 +99,7 @@ namespace TheCityStrategyGame.Model
                 }
 
                 playerRolls.Add(player, total);
-                Console.WriteLine($"{player.Name}'s roll: {roll}\n");
+                Console.WriteLine($"{player.Name}'s roll: {roll}");
             }
             Players = playerRolls.OrderByDescending(x => x.Value).Select(x => x.Key).ToList();
         }
@@ -110,8 +109,7 @@ namespace TheCityStrategyGame.Model
             CurrentRerolls = 0;
             CurrentPlayer = player;
             if (CurrentPlayer == CityOccupant) { CurrentPlayer.AddScore(2); }
-            Console.WriteLine($"It is [{player.Name}'s] turn.");
-            Console.WriteLine($"[{player.Name}] turn [{Turn}].");
+            Console.WriteLine($"{player.Name}'s turn (Turn {Turn})");
         }
 
 
@@ -119,8 +117,8 @@ namespace TheCityStrategyGame.Model
         {
             List<Die> TempRolls = new List<Die>();
 
-            Console.WriteLine("Press space to roll:");
-            Console.ReadKey();
+            Console.Write("Press space to roll:");
+            Console.ReadLine();
 
             // First Roll
             foreach (var die in Dice) 
@@ -128,12 +126,12 @@ namespace TheCityStrategyGame.Model
                 die.UnlockDie();
                 die.Roll();
                 TempRolls.Add(die);
-                die.PrintDie();
             }
 
             // Reroll
             do 
             {
+                PrintDice(TempRolls);
                 Console.WriteLine($"\nWhich dice do you want to reroll?");
                 string? userInput = Console.ReadLine();
 
@@ -151,17 +149,16 @@ namespace TheCityStrategyGame.Model
                         int d = diceToReroll[i] -1;
                         TempRolls[d] = Dice[d].Reroll(CurrentRerolls);
                     }
-                    PrintDice(TempRolls);
                     CurrentRerolls ++;
                 }             
             } 
             while (CurrentRerolls < MAX_REROLLS);
             
             Dice = TempRolls.ToList();
-            PrintDice(Dice);
             foreach (var die in Dice)
             {
                 die.LockDie();
+                die.PrintDie();
             }
         }
 
@@ -239,6 +236,7 @@ namespace TheCityStrategyGame.Model
         private void EnterCity(Player player)
         {
             CityOccupant = player;
+            Console.WriteLine($"{player.Name} has entered the city.");
             player.AddScore(1);
         }
 
@@ -247,6 +245,7 @@ namespace TheCityStrategyGame.Model
             if (CityOccupant == player)
             {
                 CityOccupant = null;
+                Console.WriteLine($"{player.Name} has exited the city.");
             }
         }
 
@@ -290,7 +289,6 @@ namespace TheCityStrategyGame.Model
             {
                 Console.Write($"[{die.DieId} - {die.Value}] ");
             }
-            Console.WriteLine("\n");
         }
     }
 }

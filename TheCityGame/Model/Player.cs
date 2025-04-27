@@ -49,25 +49,25 @@ namespace TheCityStrategyGame.Model
         public void TakeDamage(int amount)
         {        
             Health -= amount;
-            Console.WriteLine($"Player [{Name}] is taking [{amount}] damage.");
+            Console.WriteLine($"{Name} is taking [{amount}] damage");
         }
 
         public void AddScore(int amount)
         {            
             Score += amount;
-            Console.WriteLine($"Player [{Name}] gained [{amount}] points.");
+            Console.WriteLine($"{Name} gained [{amount}] point(s)");
         }
 
         public void AddMoney(int amount)
         {
             Money += amount;
-            Console.WriteLine($"Player [{Name}] gained [${amount}].");
+            Console.WriteLine($"{Name} gained [${amount}]");
         }
 
         public void SpendMoney(int amount)
         {
             Money -= amount;
-            Console.WriteLine($"Player [{Name}] spent [${amount}].");
+            Console.WriteLine($"Player [{Name}] spent [${amount}]");
         }
 
         public void Reset()

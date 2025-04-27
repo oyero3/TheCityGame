@@ -9,8 +9,8 @@ namespace TheCityStrategyGame
         {
             try
             {
-                Console.WriteLine("Welcome to The City Strategy Game!");
-                Console.WriteLine("How many players? (2-4 recommended)");
+                Console.Write("Welcome to The City Strategy Game!");
+                Console.Write("How many players? (2-4 recommended):");
                 
                 // Get player count input
                 int playerCount;
